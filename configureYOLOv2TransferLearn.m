@@ -1,0 +1,15 @@
+modelName = 'tinyYOLOv2-coco';
+helper.downloadPretrainedYOLOv2(modelName);
+pretrained = load(modelName);
+detector = pretrained.yolov2Detector;
+classNames = {'vehicle'};
+numClasses = size(classNames, 2);
+numPredictorsPerAnchor = 5 + numClasses;
+numAnchorBoxes = size(detector.AnchorBoxes,1);
+numFilters = numAnchorBoxes * numPredictorsPerAnchor;
+convLayer = convolution2dLayer(1,numFilters,'Name','conv2d','WeightsInitializer',"narrow-normal");
+lgraph = layerGraph(detector.Network);
+lgraph = replaceLayer(lgraph,'conv2d_9',convLayer);
+yolov2OutLayer = yolov2OutputLayer(detector.AnchorBoxes,'Classes',classNames,'Name','yolov2Output');
+lgraph = replaceLayer(lgraph,'yolov2Out',yolov2OutLayer);
+analyzeNetwork(lgraph);
